@@ -1,7 +1,4 @@
 .gradle
 /local.properties
-.idea
-MapSpotProject.iml
-gradlew
-gradlew.bat
+/.idea/workspace.xml
 .DS_Store
