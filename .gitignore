@@ -1,7 +1,6 @@
 .gradle
 /local.properties
-/.idea
-/MapSpot/build
+.idea
 MapSpotProject.iml
 gradlew
 gradlew.bat
