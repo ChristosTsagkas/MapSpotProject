@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/MapSpot/MapSpot.iml" filepath="$PROJECT_DIR$/MapSpot/MapSpot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MapSpotProject.iml" filepath="$PROJECT_DIR$/MapSpotProject.iml" />
+    </modules>
+  </component>
+</project>
+
