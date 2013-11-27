@@ -17,7 +17,7 @@ android {
     buildToolsVersion "19.0.0"
 
     defaultConfig {
-        minSdkVersion 7
+        minSdkVersion 12
         targetSdkVersion 19
     }
 
@@ -28,5 +28,9 @@ android {
 }
 
 dependencies {
+    // Support libraries
 	compile 'com.android.support:appcompat-v7:+'
+
+    // Google Play Services
+    compile 'com.google.android.gms:play-services:4.0.30'
 }
