@@ -22,8 +22,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener {
+public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
+        GooglePlayServicesClient.OnConnectionFailedListener, GoogleMap.OnMapClickListener {
     // Global constants
     /*
      * Define a request code to send to Google Play services
@@ -164,26 +166,8 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         }
     }
 
-    public static class ErrorDialogFragment extends DialogFragment {
-        // Global field to contain the error dialog
-        private Dialog mDialog;
-
-        // Default constructor. Sets the dialog field to null
-        public ErrorDialogFragment() {
-            super();
-            mDialog = null;
-        }
-
-        // Set the dialog to display
-        public void setDialog(Dialog dialog) {
-            mDialog = dialog;
-        }
-
-        // Return a Dialog to the DialogFragment.
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            return mDialog;
-        }
+    public void addNewMarker(MenuItem item) {
+        map.setOnMapClickListener(this);
     }
 
     /*
@@ -259,6 +243,34 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 
             // Show the error dialog in the DialogFragment
             errorFragment.show(getFragmentManager(), APPTAG);
+        }
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+        map.addMarker(new MarkerOptions().position(latLng).title("Hello world"));
+        map.setOnMapClickListener(null);
+    }
+
+    public static class ErrorDialogFragment extends DialogFragment {
+        // Global field to contain the error dialog
+        private Dialog mDialog;
+
+        // Default constructor. Sets the dialog field to null
+        public ErrorDialogFragment() {
+            super();
+            mDialog = null;
+        }
+
+        // Set the dialog to display
+        public void setDialog(Dialog dialog) {
+            mDialog = dialog;
+        }
+
+        // Return a Dialog to the DialogFragment.
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return mDialog;
         }
     }
 }

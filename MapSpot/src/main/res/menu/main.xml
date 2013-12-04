@@ -6,7 +6,8 @@
     <item
         android:id="@+id/new_point"
         android:title="@string/new_point"
-        android:showAsAction="ifRoom" />
+        android:showAsAction="ifRoom"
+        android:onClick="addNewMarker"/>
 
     <item
         android:id="@+id/get_directions"
