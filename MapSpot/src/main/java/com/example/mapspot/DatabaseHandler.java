@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.util.List;
+
 /**
  * Created by Nosfistis on 4/12/2013.
  */
@@ -48,6 +50,15 @@ public class DatabaseHandler {
 				cursor.getDouble(cursor.getColumnIndex(MySQLiteHelper.COLUMN_LATITUDE)),
 				cursor.getDouble(cursor.getColumnIndex(MySQLiteHelper.COLUMN_LONGITUDE)));
 		return newMarker;
+	}
+
+	public void deleteMarker(MapMarker marker) {
+		// TODO: implementation deleteMarker() from database
+	}
+
+	public List<MapMarker> getAllMarkers() {
+		// TODO: implementation getAllMarkers() from database
+		return null;
 	}
 
 	private class MySQLiteHelper extends SQLiteOpenHelper {

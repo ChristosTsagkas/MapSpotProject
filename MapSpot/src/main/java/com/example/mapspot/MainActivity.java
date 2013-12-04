@@ -24,6 +24,8 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.List;
+
 public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener, GoogleMap.OnMapClickListener {
     // Global constants
@@ -36,8 +38,9 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     private GoogleMap map;
     private LocationClient locationClient;
     private Location currentLocation;
+	private DatabaseHandler db;
 
-    @Override
+	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -50,8 +53,13 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         locationClient = new LocationClient(this, this, this);
         locationClient.connect();
 
+		// Start up database connection
+		db = new DatabaseHandler(this);
+		db.open();
 
-        // Get a handle to the Map Fragment
+		List<MapMarker> markers = db.getAllMarkers();
+
+		// Get a handle to the Map Fragment
         map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
     }
 
@@ -60,39 +68,30 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         super.onStart();
         // Connect the client.
         locationClient.connect();
+	    db.open();
     }
 
     @Override
     protected void onStop() {
         // Disconnecting the client invalidates it.
         locationClient.disconnect();
-        super.onStop();
+	    db.close();
+	    super.onStop();
     }
 
-    @Override
+	@Override
+	protected void onPause() {
+		// Disconnect the client
+		locationClient.disconnect();
+		db.close();
+		super.onPause();
+	}
+
+	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        switch (item.getItemId()) {
-            case R.id.new_point:
-                return true;
-            case R.id.get_directions:
-                return true;
-            case R.id.show_points:
-                return true;
-            case R.id.clear_map:
-                return true;
-            case R.id.settings:
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     private void setUpMapIfNeeded() {
