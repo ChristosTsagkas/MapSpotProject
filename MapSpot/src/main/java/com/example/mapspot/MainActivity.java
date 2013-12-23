@@ -3,6 +3,8 @@ package com.example.mapspot;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Location;
@@ -247,8 +249,20 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 
     @Override
     public void onMapClick(LatLng latLng) {
-        map.addMarker(new MarkerOptions().position(latLng).title("Hello world"));
         map.setOnMapClickListener(null);
+
+        MarkerDialogFragment dialogFragment = new MarkerDialogFragment();
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        dialogFragment.show(ft, "dialog");
+
+
+        map.addMarker(new MarkerOptions().position(latLng).title("Hello world"));
     }
 
     public static class ErrorDialogFragment extends DialogFragment {

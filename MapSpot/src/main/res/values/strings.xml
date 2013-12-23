@@ -13,4 +13,12 @@
     <!-- Toast items -->
     <string name="play_services_available">Google Play services is available</string>
 
+    <!--- Spinner Categories -->
+
+
+    <!--- Submit button -->
+    <string name="button_send">Send</string>
+
+
+
 </resources>
