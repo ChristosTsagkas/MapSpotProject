@@ -27,20 +27,23 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener, GoogleMap.OnMapClickListener {
+        GooglePlayServicesClient.OnConnectionFailedListener, GoogleMap.OnMapClickListener, MarkerDialogFragment.MarkerDialogListener {
     // Global constants
     /*
      * Define a request code to send to Google Play services
      * This code is returned in Activity.onActivityResult
      */
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
-    private final static String APPTAG = "MapSpot";
+    private final static String APPTAG = "MSpot";
     private GoogleMap map;
     private LocationClient locationClient;
     private Location currentLocation;
 	private DatabaseHandler db;
+    private MarkerDialogFragment dialogFragment;
+    private LatLng newLocation;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +62,14 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 		db = new DatabaseHandler(this);
 		db.open();
 
-		List<MapMarker> markers = db.getAllMarkers();
-
 		// Get a handle to the Map Fragment
         map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+
+        // TODO: ASyncTask
+        List<MapMarker> markers = db.getAllMarkers();
+        for (MapMarker marker : markers) {
+            map.addMarker(new MarkerOptions().position(marker.getPosition()).title(marker.getTitle()));
+        }
     }
 
     @Override
@@ -88,6 +95,14 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 		db.close();
 		super.onPause();
 	}
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Connect the client.
+        locationClient.connect();
+        db.open();
+    }
 
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -251,7 +266,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     public void onMapClick(LatLng latLng) {
         map.setOnMapClickListener(null);
 
-        MarkerDialogFragment dialogFragment = new MarkerDialogFragment();
+        dialogFragment = new MarkerDialogFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("dialog");
         if (prev != null) {
@@ -259,10 +274,18 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         }
         ft.addToBackStack(null);
 
+        newLocation = latLng;
         dialogFragment.show(ft, "dialog");
+    }
 
-
-        map.addMarker(new MarkerOptions().position(latLng).title("Hello world"));
+    @Override
+    public void onFinishMarkerDialog(Map<String, String> details) {
+        if (newLocation == null) {
+            return;
+        }
+        // TODO: ASyncTask
+        db.createMarker(details.get("title"), details.get("description"), details.get("category"), newLocation.latitude, newLocation.longitude);
+        map.addMarker(new MarkerOptions().position(newLocation).title(details.get("title")));
     }
 
     public static class ErrorDialogFragment extends DialogFragment {

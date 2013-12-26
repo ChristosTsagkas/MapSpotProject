@@ -42,9 +42,9 @@
         android:layout_height="wrap_content" />
 
     <Button
+        android:id="@+id/insert_marker_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/button_send"
-        android:onClick="sendMessage" />
+        android:text="@string/add" />
 
 </LinearLayout>
