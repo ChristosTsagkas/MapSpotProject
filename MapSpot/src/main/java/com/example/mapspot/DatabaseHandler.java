@@ -18,7 +18,8 @@ public class DatabaseHandler {
     private static final String APPTAG = "MapSpot";
     private SQLiteDatabase database;
     private MySQLiteHelper dbHelper;
-    private String[] allColumns = {MySQLiteHelper.COLUMN_TITLE,
+    private String[] allColumns = {MySQLiteHelper.COLUMN_ID,
+            MySQLiteHelper.COLUMN_TITLE,
             MySQLiteHelper.COLUMN_DESCRIPTION,
             MySQLiteHelper.COLUMN_CATEGORY,
             MySQLiteHelper.COLUMN_LATITUDE,
@@ -55,11 +56,10 @@ public class DatabaseHandler {
     }
 
     public void deleteMarker(MapMarker marker) {
-        // TODO: implementation deleteMarker() from database
+        database.delete(MySQLiteHelper.MARKERS_TABLE, MySQLiteHelper.COLUMN_ID + " = " + marker.getDbID(), null);
     }
 
     public List<MapMarker> getAllMarkers() {
-        // TODO: implementation getAllMarkers() from database
         List<MapMarker> markers = new ArrayList<>();
 
         Cursor cursor = database.query(MySQLiteHelper.MARKERS_TABLE, allColumns, null, null, null, null, null);
@@ -77,7 +77,8 @@ public class DatabaseHandler {
                 cursor.getString(cursor.getColumnIndex(MySQLiteHelper.COLUMN_DESCRIPTION)),
                 cursor.getString(cursor.getColumnIndex(MySQLiteHelper.COLUMN_CATEGORY)),
                 cursor.getDouble(cursor.getColumnIndex(MySQLiteHelper.COLUMN_LATITUDE)),
-                cursor.getDouble(cursor.getColumnIndex(MySQLiteHelper.COLUMN_LONGITUDE)));
+                cursor.getDouble(cursor.getColumnIndex(MySQLiteHelper.COLUMN_LONGITUDE)),
+                cursor.getInt(cursor.getColumnIndex(MySQLiteHelper.COLUMN_ID)));
         return newMarker;
     }
 

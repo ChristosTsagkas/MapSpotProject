@@ -10,13 +10,15 @@ public class MapMarker {
 	private String description;
 	private String category;
 	private LatLng position;
+    private long dbID;
 
-	public MapMarker(String title, String description, String category, double latitude, double longitude) {
-		this.title = title;
+    public MapMarker(String title, String description, String category, double latitude, double longitude, long dbID) {
+        this.title = title;
 		this.description = description;
 		this.category = category;
 		this.position = new LatLng(latitude, longitude);
-	}
+        this.dbID = dbID;
+    }
 
 	public String getTitle() {
 		return title;
@@ -46,7 +48,15 @@ public class MapMarker {
 		return position;
 	}
 
-	public void setPosition(LatLng position) {
-		this.position = position;
+    public void setPosition(LatLng position) {
+        this.position = position;
 	}
+
+    public long getDbID() {
+        return dbID;
+    }
+
+    public void setDbID(long dbID) {
+        this.dbID = dbID;
+    }
 }
