@@ -10,8 +10,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
 
 import static com.example.mapspot.R.layout.marker_create_fragment;
 
@@ -20,30 +21,33 @@ import static com.example.mapspot.R.layout.marker_create_fragment;
  */
 public class MarkerDetailsDialogFragment extends DialogFragment {
 
-    private HashMap<Integer, String> categoriesMap = new HashMap<>();
+    ArrayList<String> categoriesMap = new ArrayList<>();
 
     /**
      * Interface that provides methods retrieving
      * the fragment's input field values.
      */
     public interface MarkerDialogListener {
-        void onFinishMarkerDialog(Map<String, String> details);
+        void onFinishMarkerDialog(MapMarker newMarker);
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        categoriesMap.put(0, "custom location");
-        categoriesMap.put(1, "recreation");
-        categoriesMap.put(2, "gas station");
-        categoriesMap.put(3, "food and drinks");
-        categoriesMap.put(4, "supermarket");
+
+        categoriesMap.add("custom location");
+        categoriesMap.add("recreation");
+        categoriesMap.add("gas station");
+        categoriesMap.add("food and drinks");
+        categoriesMap.add("supermarket");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(marker_create_fragment, container, false);
-        getDialog().setTitle(getResources().getString(R.string.create_marker_title));
+
+        // Retrieve marker information data from arguments
+        final LatLng location = getArguments().getParcelable("location");
 
         final EditText title = (EditText) view.findViewById(R.id.marker_title);
         final EditText description = (EditText) view.findViewById(R.id.marker_description);
@@ -56,18 +60,33 @@ public class MarkerDetailsDialogFragment extends DialogFragment {
         // Apply the adapter to the spinner
         category.setAdapter(adapter);
 
+        String savedTitle = getArguments().getString("title");
+        if (savedTitle != null) {
+            String savedDescription = getArguments().getString("description");
+            String savedCategory = getArguments().getString("category");
+
+            title.setText(savedTitle);
+            description.setText(savedDescription);
+            category.setSelection(categoriesMap.indexOf(savedCategory));
+
+            getDialog().setTitle(getResources().getString(R.string.edit_marker_title));
+        } else {
+            getDialog().setTitle(getResources().getString(R.string.create_marker_title));
+        }
+
         // Set the button listener
         Button button = (Button) view.findViewById(R.id.insert_marker_button);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 MarkerDialogListener activity = (MarkerDialogListener) getActivity();
 
-                Map<String, String> details = new HashMap<>();
-                details.put("title", title.getText().toString());
-                details.put("description", description.getText().toString());
-                details.put("category", categoriesMap.get(category.getSelectedItemPosition()));
+                MapMarker newMarker = new MapMarker(title.getText().toString(),
+                        description.getText().toString(),
+                        categoriesMap.get(category.getSelectedItemPosition()),
+                        location.latitude,
+                        location.longitude);
 
-                activity.onFinishMarkerDialog(details);
+                activity.onFinishMarkerDialog(newMarker);
                 getDialog().dismiss();
                 return;
             }

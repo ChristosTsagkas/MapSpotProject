@@ -30,7 +30,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener,
@@ -46,9 +45,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     private final static String APPTAG = "MSpot";
     private GoogleMap map;
     private LocationClient locationClient;
-    private Location currentLocation;
     private DatabaseHandler db;
-    private LatLng newLocation;
     private Menu actionMenu;
     private boolean isMarkerMenuOn = false;
     private HashMap<String, Long> markerMap = new HashMap<>();
@@ -92,8 +89,9 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
      * it with the marker's database id.
      *
      * @param mapMarker A MapSpot MapMarker object containing the marker details.
+     * @return The newly created Google Maps Marker object.
      */
-    private void addMarkerToMap(MapMarker mapMarker) {
+    private Marker addMarkerToMap(MapMarker mapMarker) {
         Marker marker;
         switch (mapMarker.getCategory()) {
             case "custom location":
@@ -140,6 +138,26 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         }
 
         markerMap.put(marker.getId(), mapMarker.getDbID());
+
+        return marker;
+    }
+
+    /**
+     * Edits an existing Google Maps marker's details and redraws the marker.
+     * It does NOT actually edit a marker, since that is not possible, but
+     * recreates it using the new parameters.
+     *
+     * @param mapMarker A MapSpot MapMarker object containing the marker details.
+     * @param marker    A Google Maps Marker object describing the map to be edited.
+     * @return The new handle to the marker. The old marker's behaviour is undefined.
+     */
+    private Marker editMarkerOnMap(MapMarker mapMarker, Marker marker) {
+        markerMap.remove(marker.getId());
+        marker.remove();
+
+        marker = addMarkerToMap(mapMarker);
+
+        return marker;
     }
 
     @Override
@@ -193,7 +211,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         // Display the connection status
         Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
 
-        currentLocation = locationClient.getLastLocation();
+        Location currentLocation = locationClient.getLastLocation();
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
     }
 
@@ -242,6 +260,11 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         }
     }
 
+    /**
+     * On click listener action function for the new point button
+     *
+     * @param item The button clicked.
+     */
     public void addNewMarker(MenuItem item) {
         map.setOnMapClickListener(this);
     }
@@ -328,30 +351,40 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         // Change action menu to original and do nothing else.
         if (isMarkerMenuOn) {
             removeMarkerMenu();
+        } else {
+            map.setOnMapClickListener(null);
+
+            MarkerDetailsDialogFragment dialogFragment = new MarkerDetailsDialogFragment();
+
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("location", latLng);
+            dialogFragment.setArguments(bundle);
+
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+            if (prev != null) {
+                ft.remove(prev);
+            }
+            ft.addToBackStack(null);
+
+            dialogFragment.show(ft, "dialog");
         }
-
-        map.setOnMapClickListener(null);
-
-        MarkerDetailsDialogFragment dialogFragment = new MarkerDetailsDialogFragment();
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
-        if (prev != null) {
-            ft.remove(prev);
-        }
-        ft.addToBackStack(null);
-
-        newLocation = latLng;
-        dialogFragment.show(ft, "dialog");
     }
 
     @Override
-    public void onFinishMarkerDialog(Map<String, String> details) {
-        if (newLocation == null) {
-            return;
-        }
+    public void onFinishMarkerDialog(MapMarker mapMarker) {
         // TODO: ASyncTask
-        db.createMarker(details.get("title"), details.get("description"), details.get("category"), newLocation.latitude, newLocation.longitude);
-        map.addMarker(new MarkerOptions().position(newLocation).title(details.get("title")).snippet(details.get("description")));
+        if (selectedMarker == null) {
+            // Marker is first created
+            MapMarker newMarker = db.createMarker(mapMarker.getTitle(), mapMarker.getDescription(), mapMarker.getCategory(), mapMarker.getPosition().latitude, mapMarker.getPosition().longitude);
+            addMarkerToMap(newMarker);
+        } else {
+            // Marker is edited, not created
+            db.editMarker(mapMarker.getTitle(), mapMarker.getDescription(), mapMarker.getCategory(), markerMap.get(selectedMarker.getId()));
+            MapMarker editedMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
+            editMarkerOnMap(editedMarker, selectedMarker);
+            removeMarkerMenu();
+        }
         Toast.makeText(this, getResources().getText(R.string.successful_save), Toast.LENGTH_SHORT);
     }
 
@@ -359,7 +392,6 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     public void onInfoWindowClick(Marker marker) {
         selectedMarker = marker;
 
-        // TESTING ACTION MENU CHANGER
         actionMenu.clear();
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.marker_actions, actionMenu);
@@ -379,25 +411,59 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
             int result = db.deleteMarker(markerMap.get(selectedMarker.getId()));
             if (result > 0) {
                 selectedMarker.remove();
-                selectedMarker = null;
                 Toast.makeText(this, getResources().getText(R.string.successful_delete), Toast.LENGTH_SHORT);
             }
+            selectedMarker = null;
         }
         removeMarkerMenu();
     }
 
+    /**
+     * Displays a dialog for the user to edit the selected marker.
+     *
+     * @param item The button clicked.
+     */
     public void editMarker(MenuItem item) {
+        Log.d(APPTAG, selectedMarker.getId());
+        MapMarker mapMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
+
+        if (mapMarker == null) {
+            Log.d(APPTAG, "Empty marker");
+        }
+
+        MarkerDetailsDialogFragment dialogFragment = new MarkerDetailsDialogFragment();
+
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("location", selectedMarker.getPosition());
+        bundle.putString("title", mapMarker.getTitle());
+        bundle.putString("description", mapMarker.getDescription());
+        bundle.putString("category", mapMarker.getCategory());
+        dialogFragment.setArguments(bundle);
+
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        dialogFragment.show(ft, "dialog");
     }
 
     public void getDirections(MenuItem item) {
+        // TODO: implementation
+        removeMarkerMenu();
     }
 
     public void shareMarker(MenuItem item) {
+        // TODO: implementation
+        removeMarkerMenu();
     }
 
     /**
      * Clears the action bar menu from any existing menus
-     * and replaces it with the main one.
+     * and replaces it with the main one. Also programmatically
+     * deselects any selected Google Maps markers.
      */
     private void removeMarkerMenu() {
         actionMenu.clear();
@@ -405,6 +471,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         inflater.inflate(R.menu.main, actionMenu);
         isMarkerMenuOn = false;
         map.setOnMapClickListener(null);
+        selectedMarker = null;
         return;
     }
 

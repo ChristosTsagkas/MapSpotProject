@@ -11,7 +11,7 @@
     <item
         android:id="@+id/edit"
         android:title="@string/edit"
-        android:showAsAction="ifRoom"
+        android:showAsAction="always"
         android:onClick="editMarker" />
     <item
         android:id="@+id/directions"

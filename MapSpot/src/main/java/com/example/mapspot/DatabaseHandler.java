@@ -73,6 +73,17 @@ public class DatabaseHandler {
         return markers;
     }
 
+    public MapMarker getMarkerByID(long id) {
+        Cursor cursor = database.query(MySQLiteHelper.MARKERS_TABLE, allColumns, MySQLiteHelper.COLUMN_ID + " = " + id, null, null, null, null);
+        cursor.moveToFirst();
+        if (!cursor.isAfterLast()) {
+            MapMarker marker = cursorToMarker(cursor);
+            return marker;
+        } else {
+            return null;
+        }
+    }
+
     private MapMarker cursorToMarker(Cursor cursor) {
         MapMarker newMarker = new MapMarker(cursor.getString(cursor.getColumnIndex(MySQLiteHelper.COLUMN_TITLE)),
                 cursor.getString(cursor.getColumnIndex(MySQLiteHelper.COLUMN_DESCRIPTION)),
@@ -81,6 +92,16 @@ public class DatabaseHandler {
                 cursor.getDouble(cursor.getColumnIndex(MySQLiteHelper.COLUMN_LONGITUDE)),
                 cursor.getInt(cursor.getColumnIndex(MySQLiteHelper.COLUMN_ID)));
         return newMarker;
+    }
+
+    public int editMarker(String title, String description, String category, long id) {
+        ContentValues values = new ContentValues();
+        values.put(MySQLiteHelper.COLUMN_TITLE, title);
+        values.put(MySQLiteHelper.COLUMN_DESCRIPTION, description);
+        values.put(MySQLiteHelper.COLUMN_CATEGORY, category);
+
+        int result = database.update(MySQLiteHelper.MARKERS_TABLE, values, MySQLiteHelper.COLUMN_ID + " = " + id, null);
+        return result;
     }
 
     private class MySQLiteHelper extends SQLiteOpenHelper {

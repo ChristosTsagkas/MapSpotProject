@@ -33,14 +33,15 @@
 
     <!-- Category names -->
     <string name="create_marker_title">New marker details</string>
+    <string name="edit_marker_title">Edit marker details</string>
     <string name="custom_location">Custom Location</string>
-    <string name="recreation">Recreation</string>
+    <string name="recreation">Parks &amp; Recreation</string>
     <string name="gas_station">Gas Station</string>
     <string name="food_and_drinks">Food &amp; Drinks</string>
     <string name="supermarket">Supermarket</string>
 
     <!-- Submit button -->
-    <string name="add">Add</string>
+    <string name="save">Save</string>
 
 
 </resources>
