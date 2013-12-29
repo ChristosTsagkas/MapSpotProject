@@ -12,7 +12,8 @@
 
     <!-- Toast items -->
     <string name="play_services_available">Google Play services is available</string>
-    <string name="successful_save">Saved marker!</string>
+    <string name="successful_save">Saved successfully</string>
+    <string name="successful_delete">Successful deletion</string>
 
     <!-- Marker menu items -->
     <string name="marker_options_title">Marker options</string>

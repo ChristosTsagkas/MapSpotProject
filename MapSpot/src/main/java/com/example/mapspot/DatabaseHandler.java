@@ -55,8 +55,9 @@ public class DatabaseHandler {
         return newMarker;
     }
 
-    public void deleteMarker(MapMarker marker) {
-        database.delete(MySQLiteHelper.MARKERS_TABLE, MySQLiteHelper.COLUMN_ID + " = " + marker.getDbID(), null);
+    public int deleteMarker(long id) {
+        int result = database.delete(MySQLiteHelper.MARKERS_TABLE, MySQLiteHelper.COLUMN_ID + " = " + id, null);
+        return result;
     }
 
     public List<MapMarker> getAllMarkers() {

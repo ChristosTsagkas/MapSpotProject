@@ -18,7 +18,7 @@ import static com.example.mapspot.R.layout.marker_create_fragment;
 /**
  * Created by George on 4/12/2013.
  */
-public class NewMarkerDialogFragment extends DialogFragment {
+public class MarkerDetailsDialogFragment extends DialogFragment {
 
     private HashMap<Integer, String> categoriesMap = new HashMap<>();
 

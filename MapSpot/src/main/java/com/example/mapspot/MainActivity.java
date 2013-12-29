@@ -35,7 +35,7 @@ import java.util.Map;
 public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener,
         GoogleMap.OnMapClickListener,
-        NewMarkerDialogFragment.MarkerDialogListener,
+        MarkerDetailsDialogFragment.MarkerDialogListener,
         GoogleMap.OnInfoWindowClickListener {
     // Global constants
     /*
@@ -52,6 +52,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     private Menu actionMenu;
     private boolean isMarkerMenuOn = false;
     private HashMap<String, Long> markerMap = new HashMap<>();
+    private Marker selectedMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -323,21 +324,15 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 
     @Override
     public void onMapClick(LatLng latLng) {
-        // TODO: Split into separate functions
         // This was called from an info window dismissal.
         // Change action menu to original and do nothing else.
         if (isMarkerMenuOn) {
-            actionMenu.clear();
-            MenuInflater inflater = getMenuInflater();
-            inflater.inflate(R.menu.main, actionMenu);
-            isMarkerMenuOn = false;
-            map.setOnMapClickListener(null);
-            return;
+            removeMarkerMenu();
         }
 
         map.setOnMapClickListener(null);
 
-        NewMarkerDialogFragment dialogFragment = new NewMarkerDialogFragment();
+        MarkerDetailsDialogFragment dialogFragment = new MarkerDetailsDialogFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("dialog");
         if (prev != null) {
@@ -362,31 +357,33 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-/*        MarkerActionsDialogFragment dialogFragment = new MarkerActionsDialogFragment();
-
-        // Pass marker as argument
-        Bundle args = new Bundle();
-        args.putString("id", marker.getId());
-        dialogFragment.setArguments(args);
-
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
-        if (prev != null) {
-            ft.remove(prev);
-        }
-        ft.addToBackStack(null);
-
-        dialogFragment.show(ft, "dialog");*/
+        selectedMarker = marker;
 
         // TESTING ACTION MENU CHANGER
         actionMenu.clear();
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.marker_actions, actionMenu);
+
+        // Turn on map click listener for info window cancel dismissal
         map.setOnMapClickListener(this);
         isMarkerMenuOn = true;
     }
 
+    /**
+     * Deletes the selected marker from the database, and removes it from the map.
+     *
+     * @param item The button clicked.
+     */
     public void deleteMarker(MenuItem item) {
+        if (selectedMarker != null) {
+            int result = db.deleteMarker(markerMap.get(selectedMarker.getId()));
+            if (result > 0) {
+                selectedMarker.remove();
+                selectedMarker = null;
+                Toast.makeText(this, getResources().getText(R.string.successful_delete), Toast.LENGTH_SHORT);
+            }
+        }
+        removeMarkerMenu();
     }
 
     public void editMarker(MenuItem item) {
@@ -396,6 +393,19 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     }
 
     public void shareMarker(MenuItem item) {
+    }
+
+    /**
+     * Clears the action bar menu from any existing menus
+     * and replaces it with the main one.
+     */
+    private void removeMarkerMenu() {
+        actionMenu.clear();
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, actionMenu);
+        isMarkerMenuOn = false;
+        map.setOnMapClickListener(null);
+        return;
     }
 
     public static class ErrorDialogFragment extends DialogFragment {
