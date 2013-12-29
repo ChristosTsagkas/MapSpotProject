@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+    <item
+        android:id="@+id/delete"
+        android:title="@string/delete"
+        android:showAsAction="ifRoom"
+        android:onClick="deleteMarker" />
+    <item
+        android:id="@+id/edit"
+        android:title="@string/edit"
+        android:showAsAction="ifRoom"
+        android:onClick="editMarker" />
+    <item
+        android:id="@+id/directions"
+        android:title="@string/directions"
+        android:showAsAction="always"
+        android:onClick="getDirections" />
+    <item
+        android:id="@+id/share"
+        android:title="@string/share"
+        android:showAsAction="ifRoom"
+        android:onClick="shareMarker" />
+
+</menu>

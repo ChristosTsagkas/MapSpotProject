@@ -12,8 +12,16 @@
 
     <!-- Toast items -->
     <string name="play_services_available">Google Play services is available</string>
+    <string name="successful_save">Saved marker!</string>
 
-    <!--- Spinner Categories -->
+    <!-- Marker menu items -->
+    <string name="marker_options_title">Marker options</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="directions">Get directions</string>
+    <string name="share">Share to Facebook</string>
+
+    <!-- Spinner Categories -->
     <string-array name="categories_array">
         <item>@string/custom_location</item>
         <item>@string/recreation</item>
@@ -22,16 +30,16 @@
         <item>@string/supermarket</item>
     </string-array>
 
-    <string name="dialog_title">New marker details</string>
+    <!-- Category names -->
+    <string name="create_marker_title">New marker details</string>
     <string name="custom_location">Custom Location</string>
     <string name="recreation">Recreation</string>
     <string name="gas_station">Gas Station</string>
     <string name="food_and_drinks">Food &amp; Drinks</string>
     <string name="supermarket">Supermarket</string>
 
-    <!--- Submit button -->
+    <!-- Submit button -->
     <string name="add">Add</string>
-
 
 
 </resources>

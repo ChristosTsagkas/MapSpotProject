@@ -28,13 +28,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener,
         GoogleMap.OnMapClickListener,
-        MarkerDialogFragment.MarkerDialogListener,
+        NewMarkerDialogFragment.MarkerDialogListener,
         GoogleMap.OnInfoWindowClickListener {
     // Global constants
     /*
@@ -47,26 +48,29 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     private LocationClient locationClient;
     private Location currentLocation;
     private DatabaseHandler db;
-    private MarkerDialogFragment dialogFragment;
     private LatLng newLocation;
+    private Menu actionMenu;
+    private boolean isMarkerMenuOn = false;
+    private HashMap<String, Long> markerMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        getActionBar().setDisplayShowTitleEnabled(false);
 
         /*
          * Create a new location client, using the enclosing class to
          * handle callbacks.
          */
         locationClient = new LocationClient(this, this, this);
-        locationClient.connect();
 
         // Start up database connection
         db = new DatabaseHandler(this);
         db.open();
 
+        // TODO: check for google play services
         // Get a handle to the Map Fragment
         map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
 
@@ -80,50 +84,61 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         map.setOnInfoWindowClickListener(this);
     }
 
-    private void addMarkerToMap(MapMarker marker) {
-        switch (marker.getCategory()) {
+    /**
+     * Adds a Google Maps marker on the map. The title and description of the marker
+     * make the info window text, and the category of the marker decides its color.
+     * Also adds the new Google Maps marker's unique map id to a HashMap, associating
+     * it with the marker's database id.
+     *
+     * @param mapMarker A MapSpot MapMarker object containing the marker details.
+     */
+    private void addMarkerToMap(MapMarker mapMarker) {
+        Marker marker;
+        switch (mapMarker.getCategory()) {
             case "custom location":
-                map.addMarker(new MarkerOptions()
-                        .position(marker.getPosition())
-                        .title(marker.getTitle())
-                        .snippet(marker.getDescription())
+                marker = map.addMarker(new MarkerOptions()
+                        .position(mapMarker.getPosition())
+                        .title(mapMarker.getTitle())
+                        .snippet(mapMarker.getDescription())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                 break;
             case "recreation":
-                map.addMarker(new MarkerOptions()
-                        .position(marker.getPosition())
-                        .title(marker.getTitle())
-                        .snippet(marker.getDescription())
+                marker = map.addMarker(new MarkerOptions()
+                        .position(mapMarker.getPosition())
+                        .title(mapMarker.getTitle())
+                        .snippet(mapMarker.getDescription())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)));
                 break;
             case "gas station":
-                map.addMarker(new MarkerOptions()
-                        .position(marker.getPosition())
-                        .title(marker.getTitle())
-                        .snippet(marker.getDescription())
+                marker = map.addMarker(new MarkerOptions()
+                        .position(mapMarker.getPosition())
+                        .title(mapMarker.getTitle())
+                        .snippet(mapMarker.getDescription())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
                 break;
             case "food and drinks":
-                map.addMarker(new MarkerOptions()
-                        .position(marker.getPosition())
-                        .title(marker.getTitle())
-                        .snippet(marker.getDescription())
+                marker = map.addMarker(new MarkerOptions()
+                        .position(mapMarker.getPosition())
+                        .title(mapMarker.getTitle())
+                        .snippet(mapMarker.getDescription())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)));
                 break;
             case "supermarket":
-                map.addMarker(new MarkerOptions()
-                        .position(marker.getPosition())
-                        .title(marker.getTitle())
-                        .snippet(marker.getDescription())
+                marker = map.addMarker(new MarkerOptions()
+                        .position(mapMarker.getPosition())
+                        .title(mapMarker.getTitle())
+                        .snippet(mapMarker.getDescription())
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
                 break;
             default:
-                map.addMarker(new MarkerOptions()
-                        .position(marker.getPosition())
-                        .title(marker.getTitle())
-                        .snippet(marker.getDescription()));
+                marker = map.addMarker(new MarkerOptions()
+                        .position(mapMarker.getPosition())
+                        .title(mapMarker.getTitle())
+                        .snippet(mapMarker.getDescription()));
                 break;
         }
+
+        markerMap.put(marker.getId(), mapMarker.getDbID());
     }
 
     @Override
@@ -162,19 +177,9 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
+
+        actionMenu = menu;
         return true;
-    }
-
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (map == null) {
-            map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-            // Check if we were successful in obtaining the map.
-            if (map != null) {
-                // The Map is verified. It is now safe to manipulate the map.
-
-            }
-        }
     }
 
     /*
@@ -318,9 +323,21 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 
     @Override
     public void onMapClick(LatLng latLng) {
+        // TODO: Split into separate functions
+        // This was called from an info window dismissal.
+        // Change action menu to original and do nothing else.
+        if (isMarkerMenuOn) {
+            actionMenu.clear();
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.main, actionMenu);
+            isMarkerMenuOn = false;
+            map.setOnMapClickListener(null);
+            return;
+        }
+
         map.setOnMapClickListener(null);
 
-        dialogFragment = new MarkerDialogFragment();
+        NewMarkerDialogFragment dialogFragment = new NewMarkerDialogFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("dialog");
         if (prev != null) {
@@ -340,11 +357,45 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         // TODO: ASyncTask
         db.createMarker(details.get("title"), details.get("description"), details.get("category"), newLocation.latitude, newLocation.longitude);
         map.addMarker(new MarkerOptions().position(newLocation).title(details.get("title")).snippet(details.get("description")));
+        Toast.makeText(this, getResources().getText(R.string.successful_save), Toast.LENGTH_SHORT);
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        // TODO: Show menu
+/*        MarkerActionsDialogFragment dialogFragment = new MarkerActionsDialogFragment();
+
+        // Pass marker as argument
+        Bundle args = new Bundle();
+        args.putString("id", marker.getId());
+        dialogFragment.setArguments(args);
+
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        dialogFragment.show(ft, "dialog");*/
+
+        // TESTING ACTION MENU CHANGER
+        actionMenu.clear();
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.marker_actions, actionMenu);
+        map.setOnMapClickListener(this);
+        isMarkerMenuOn = true;
+    }
+
+    public void deleteMarker(MenuItem item) {
+    }
+
+    public void editMarker(MenuItem item) {
+    }
+
+    public void getDirections(MenuItem item) {
+    }
+
+    public void shareMarker(MenuItem item) {
     }
 
     public static class ErrorDialogFragment extends DialogFragment {

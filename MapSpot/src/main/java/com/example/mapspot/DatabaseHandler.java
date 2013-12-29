@@ -90,7 +90,6 @@ public class DatabaseHandler {
         private static final String COLUMN_CATEGORY = "category";
         private static final String COLUMN_LATITUDE = "latitude";
         private static final String COLUMN_LONGITUDE = "longitude";
-        // TODO: Preset categories
         private static final String DATABASE_NAME = "mapspot.db";
         private static final int DATABASE_VERSION = 1;
         private final String DATABASE_CREATE = "create table " + MARKERS_TABLE + "("
