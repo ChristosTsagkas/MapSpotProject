@@ -16,6 +16,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphObject;
+import com.facebook.model.OpenGraphAction;
+import com.facebook.model.OpenGraphObject;
+import com.facebook.widget.FacebookDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -50,6 +57,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
     private boolean isMarkerMenuOn = false;
     private HashMap<String, Long> markerMap = new HashMap<>();
     private Marker selectedMarker;
+    private UiLifecycleHelper uiHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +88,15 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
 
         // Set onclick events for the info balloons
         map.setOnInfoWindowClickListener(this);
+
+        // Facebook handler
+        uiHelper = new UiLifecycleHelper(this, new Session.StatusCallback() {
+            @Override
+            public void call(Session session, SessionState state, Exception exception) {
+                onSessionStateChanged(session, state, exception);
+            }
+        });
+        uiHelper.onCreate(savedInstanceState);
     }
 
     /**
@@ -182,6 +199,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         locationClient.disconnect();
         db.close();
         super.onPause();
+        uiHelper.onPause();
     }
 
     @Override
@@ -190,6 +208,19 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         // Connect the client.
         locationClient.connect();
         db.open();
+        uiHelper.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        uiHelper.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        uiHelper.onSaveInstanceState(outState);
     }
 
     @Override
@@ -290,6 +321,22 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
                         break;
                 }
         }
+
+        uiHelper.onActivityResult(requestCode, resultCode, data, new FacebookDialog.Callback() {
+            @Override
+            public void onError(FacebookDialog.PendingCall pendingCall, Exception error, Bundle data) {
+                Log.e("Activity", String.format("Error: %s", error.toString()));
+            }
+
+            @Override
+            public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle data) {
+                Log.i("Activity", "Success!");
+            }
+        });
+    }
+
+    private void onSessionStateChanged(Session session, SessionState state, Exception exception) {
+        Log.d(APPTAG, "RESPONSE");
     }
 
     private boolean servicesConnected() {
@@ -424,12 +471,7 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
      * @param item The button clicked.
      */
     public void editMarker(MenuItem item) {
-        Log.d(APPTAG, selectedMarker.getId());
         MapMarker mapMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
-
-        if (mapMarker == null) {
-            Log.d(APPTAG, "Empty marker");
-        }
 
         MarkerDetailsDialogFragment dialogFragment = new MarkerDetailsDialogFragment();
 
@@ -455,8 +497,27 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         removeMarkerMenu();
     }
 
+    /**
+     * Shares the selected marker to Facebook using Facebook Share screen.
+     *
+     * @param item The button clicked.
+     */
     public void shareMarker(MenuItem item) {
-        // TODO: implementation
+        MapMarker mapMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
+
+        OpenGraphObject meal = OpenGraphObject.Factory.createForPost("video.movie");
+        meal.setProperty("title", "Buffalo Tacos");
+        meal.setProperty("image", "http://ia.media-imdb.com/images/M/MV5BMzU0NDY0NDEzNV5BMl5BanBnXkFtZTgwOTIxNDU1MDE@._V1_SX640_SY720_.jpg");
+        meal.setProperty("url", "http://www.imdb.com/title/tt1170358/?ref_=hm_cht_t1");
+        meal.setProperty("description", "Leaner than beef and great flavor.");
+
+        OpenGraphAction action = GraphObject.Factory.create(OpenGraphAction.class);
+        action.setProperty("objects/video.movie", meal);
+
+        FacebookDialog shareDialog = new FacebookDialog.OpenGraphActionDialogBuilder(this, action, "video.watches", "objects/video.movie")
+                .build();
+        uiHelper.trackPendingDialogCall(shareDialog.present());
+
         removeMarkerMenu();
     }
 
@@ -473,6 +534,18 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         map.setOnMapClickListener(null);
         selectedMarker = null;
         return;
+    }
+
+    public void clearMap(MenuItem item) {
+        map.clear();
+    }
+
+    public void showMarkers(MenuItem item) {
+        // TODO: ASyncTask
+        List<MapMarker> markers = db.getAllMarkers();
+        for (MapMarker marker : markers) {
+            addMarkerToMap(marker);
+        }
     }
 
     public static class ErrorDialogFragment extends DialogFragment {

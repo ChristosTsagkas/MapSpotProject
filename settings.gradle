@@ -1,1 +1,1 @@
-include ':MapSpot'
+include ':libraries:facebook', ':MapSpot'

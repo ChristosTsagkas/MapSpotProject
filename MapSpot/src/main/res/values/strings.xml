@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">MapSpot</string>
+    <string name="app_id">436515043144153</string>
 
     <!-- Menu items -->
     <string name="settings">Settings</string>

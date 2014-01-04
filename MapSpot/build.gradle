@@ -29,8 +29,11 @@ android {
 
 dependencies {
     // Support libraries
-	compile 'com.android.support:appcompat-v7:+'
+    compile 'com.android.support:appcompat-v7:+'
 
     // Google Play Services
     compile 'com.google.android.gms:play-services:4.0.30'
+
+    // Facebook SDK
+    compile project(':libraries:facebook')
 }

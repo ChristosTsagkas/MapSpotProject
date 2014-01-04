@@ -106,7 +106,7 @@ public class DatabaseHandler {
 
     private class MySQLiteHelper extends SQLiteOpenHelper {
         private static final String MARKERS_TABLE = "marker_details";
-        private static final String COLUMN_ID = "_id";
+        private static final String COLUMN_ID = "id";
         private static final String COLUMN_TITLE = "title";
         private static final String COLUMN_DESCRIPTION = "description";
         private static final String COLUMN_CATEGORY = "category";
@@ -118,7 +118,7 @@ public class DatabaseHandler {
                 + COLUMN_ID + " integer primary key autoincrement, "
                 + COLUMN_TITLE + " varchar(255) not null, "
                 + COLUMN_DESCRIPTION + " text, "
-                + COLUMN_CATEGORY + " enum('recreation', 'custom location', 'gas station', 'food and drinks', 'supermarket') not null, "
+                + COLUMN_CATEGORY + " varchar(255) not null, "
                 + COLUMN_LATITUDE + " double not null, "
                 + COLUMN_LONGITUDE + " double not null"
                 + ");";

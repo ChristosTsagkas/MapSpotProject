@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/MapSpot/MapSpot.iml" filepath="$PROJECT_DIR$/MapSpot/MapSpot.iml" />
       <module fileurl="file://$PROJECT_DIR$/MapSpotProject.iml" filepath="$PROJECT_DIR$/MapSpotProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libraries/facebook/facebook.iml" filepath="$PROJECT_DIR$/libraries/facebook/facebook.iml" />
+      <module fileurl="file://$PROJECT_DIR$/libraries/libraries.iml" filepath="$PROJECT_DIR$/libraries/libraries.iml" />
     </modules>
   </component>
 </project>
