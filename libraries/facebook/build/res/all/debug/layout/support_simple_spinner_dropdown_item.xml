@@ -22,4 +22,4 @@
           android:singleLine="true"
           android:layout_width="match_parent"
           android:layout_height="?attr/dropdownListPreferredItemHeight"
-          android:ellipsize="marquee"/><!-- From: file:/usr/local/google/home/raphael/android/klp-dev/frameworks/support/v7/appcompat/res/layout/support_simple_spinner_dropdown_item.xml --><!-- From: file:/C:/Users/Μιχάλης/Android%20Studio%20Projects/MapSpotProject/libraries/facebook/build/exploded-bundles/ComAndroidSupportAppcompatV71900.aar/res/layout/support_simple_spinner_dropdown_item.xml -->
+          android:ellipsize="marquee"/><!-- From: file:/Volumes/Android/int/klp-dev/frameworks/support/v7/appcompat/res/layout/support_simple_spinner_dropdown_item.xml --><!-- From: file:/C:/Users/Μιχάλης/Android%20Studio%20Projects/MapSpotProject/libraries/facebook/build/exploded-bundles/ComAndroidSupportAppcompatV71901.aar/res/layout/support_simple_spinner_dropdown_item.xml -->

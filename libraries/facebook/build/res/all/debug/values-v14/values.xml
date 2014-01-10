@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- From: file:/C:/Users/Μιχάλης/Android%20Studio%20Projects/MapSpotProject/libraries/facebook/build/exploded-bundles/ComAndroidSupportAppcompatV71900.aar/res/values-v14/values.xml -->
+    <!-- From: file:/C:/Users/Μιχάλης/Android%20Studio%20Projects/MapSpotProject/libraries/facebook/build/exploded-bundles/ComAndroidSupportAppcompatV71901.aar/res/values-v14/values.xml -->
     <eat-comment />
 
     <style name="TextAppearance.AppCompat.Base.SearchResult.Subtitle" parent="@android:TextAppearance.Holo.SearchResult.Subtitle" />
