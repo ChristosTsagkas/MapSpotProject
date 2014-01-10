@@ -492,6 +492,11 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         dialogFragment.show(ft, "dialog");
     }
 
+    /**
+     * Shows a new activity with a menu about directions options.
+     *
+     * @param item The button clicked.
+     */
     public void getDirections(MenuItem item) {
         // TODO: implementation
         removeMarkerMenu();
@@ -536,10 +541,20 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         return;
     }
 
+    /**
+     * Clears the map of any visible markers.
+     *
+     * @param item The button clicked.
+     */
     public void clearMap(MenuItem item) {
         map.clear();
     }
 
+    /**
+     * Shows all existing database markers on map.
+     *
+     * @param item The button clicked.
+     */
     public void showMarkers(MenuItem item) {
         // TODO: ASyncTask
         List<MapMarker> markers = db.getAllMarkers();

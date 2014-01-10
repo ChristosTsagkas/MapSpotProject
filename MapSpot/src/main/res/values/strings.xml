@@ -43,6 +43,6 @@
 
     <!-- Submit button -->
     <string name="save">Save</string>
-
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
