@@ -7,12 +7,13 @@
         android:id="@+id/new_point"
         android:title="@string/new_point"
         android:showAsAction="ifRoom"
-        android:onClick="addNewMarker"/>
+        android:onClick="addNewMarker" />
 
     <item
         android:id="@+id/get_directions"
         android:title="@string/get_directions"
-        android:showAsAction="ifRoom" />
+        android:showAsAction="ifRoom"
+        android:onClick="getDirections" />
 
     <item
         android:id="@+id/show_points"

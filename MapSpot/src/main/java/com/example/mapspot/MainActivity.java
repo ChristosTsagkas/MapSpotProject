@@ -8,6 +8,7 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -41,8 +42,9 @@ import java.util.List;
 public class MainActivity extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener,
         GoogleMap.OnMapClickListener,
-        MarkerDetailsDialogFragment.MarkerDialogListener,
-        GoogleMap.OnInfoWindowClickListener {
+        GoogleMap.OnInfoWindowClickListener,
+        DirectionsOptionsFragment.OnFragmentInteractionListener,
+        MarkerDetailsDialogFragment.MarkerDialogListener {
     // Global constants
     /*
      * Define a request code to send to Google Play services
@@ -498,7 +500,17 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
      * @param item The button clicked.
      */
     public void getDirections(MenuItem item) {
-        // TODO: implementation
+        DirectionsOptionsFragment dialogFragment = new DirectionsOptionsFragment();
+
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        dialogFragment.show(ft, "dialog");
+
         removeMarkerMenu();
     }
 
@@ -561,6 +573,11 @@ public class MainActivity extends FragmentActivity implements GooglePlayServices
         for (MapMarker marker : markers) {
             addMarkerToMap(marker);
         }
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 
     public static class ErrorDialogFragment extends DialogFragment {
