@@ -15,6 +15,7 @@
     <string name="play_services_available">Google Play services is available</string>
     <string name="successful_save">Saved successfully</string>
     <string name="successful_delete">Successful deletion</string>
+    <string name="select_marker">Select a marker</string>
 
     <!-- Marker menu items -->
     <string name="marker_options_title">Marker options</string>
@@ -55,6 +56,7 @@
     <string name="navigation">Start navigation</string>
     <string name="custom">Custom</string>
     <string name="current">Current</string>
+    <string name="pedestrian">Pedestrian</string>
 
     <!-- Spinner destination type -->
     <string-array name="destinations_array">
