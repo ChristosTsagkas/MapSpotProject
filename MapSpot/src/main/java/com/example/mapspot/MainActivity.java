@@ -5,7 +5,6 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -53,7 +52,8 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     private HashMap<String, Long> markerMap = new HashMap<>();
     private Marker selectedMarker;
     private UiLifecycleHelper uiHelper;
-    private boolean selectDirectionsMarkerState = false;
+
+    private DirectionsOptionsFragment onHoldDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -383,9 +383,21 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
      * @param item The button clicked.
      */
     public void getDirections(MenuItem item) {
-        Location currentLocation = locationClient.getLastLocation();
-        LatLng latLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-        DirectionsOptionsFragment dialogFragment = DirectionsOptionsFragment.newInstance(latLng);
+        DirectionsOptionsFragment dialogFragment;
+        if (selectedMarker != null) {
+            MapMarker mapMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
+
+            dialogFragment = DirectionsOptionsFragment.newInstance(
+                    0,                      // Default value for start type
+                    "",                     // Default value for start text
+                    2,                      // MapSpot for end type
+                    mapMarker.getTitle(),   // MapSpot title for end text
+                    0,                      // Default value for transport type
+                    0,                      // Default value for start MapSpot database marker id
+                    mapMarker.getDbID());   // MapSpot database marker id
+        } else {
+            dialogFragment = new DirectionsOptionsFragment();
+        }
 
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         Fragment prev = getFragmentManager().findFragmentByTag("dialog");
@@ -462,42 +474,76 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
 
     @Override
     public void onFragmentInteraction() {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        Fragment dialog = getFragmentManager().findFragmentByTag("dialog");
-        ft.hide(dialog);
+        onHoldDialog = (DirectionsOptionsFragment) getFragmentManager().findFragmentByTag("dialog");
+        onHoldDialog.dismiss();
 
+        map.setOnMarkerClickListener(this);
         Toast.makeText(this, getResources().getString(R.string.select_marker), Toast.LENGTH_LONG).show();
-
-        selectDirectionsMarkerState = true;
     }
 
     @Override
-    public void onFragmentFinish(String startSelection, String startText, String endSelection, String endText, int transportSelection) {
+    public void onFragmentFinish(int startSelection, String startText, int endSelection, String endText, int transportSelection) {
+        Log.d(APPTAG, "Type of starting point: " + startSelection + "\n"
+                + "Value of starting point: " + startText + "\n"
+                + "Type of destination: " + endSelection + "\n"
+                + "Value of destination: " + endText + "\n"
+                + "Type of transport: " + transportSelection);
         DialogFragment dialog = (DialogFragment) getFragmentManager().findFragmentByTag("dialog");
         if (dialog != null) {
             dialog.dismiss();
         }
 
-
+        // TODO: add code
+        locationClient.getLastLocation();
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        if (selectDirectionsMarkerState) {
-            MapMarker mapMarker = db.getMarkerByID(markerMap.get(marker.getId()));
+        // Disable the listener
+        map.setOnMarkerClickListener(null);
 
-            // Send the marker title to fragment
-            DirectionsOptionsFragment dialog = (DirectionsOptionsFragment) getFragmentManager().findFragmentByTag("dialog");
-            if (dialog != null) {
-                dialog.setPointText(mapMarker.getTitle());
-                dialog.show(getFragmentManager().beginTransaction(), "dialog");
+        MapMarker mapMarker = db.getMarkerByID(markerMap.get(marker.getId()));
+
+        // Send the marker title to fragment
+        if (onHoldDialog != null) {
+            String text = mapMarker.getTitle();
+            DirectionsOptionsFragment newFragment = null;
+
+            switch (onHoldDialog.getReferencedSpinnerID()) {
+                case R.id.starting_point_spinner:
+                    newFragment = DirectionsOptionsFragment.newInstance(
+                            onHoldDialog.getStartType(),
+                            text,
+                            onHoldDialog.getEndType(),
+                            onHoldDialog.getEndText(),
+                            onHoldDialog.getTransportType(),
+                            mapMarker.getDbID(),
+                            onHoldDialog.getEndMarkerID());
+                    break;
+                case R.id.destination_spinner:
+                    newFragment = DirectionsOptionsFragment.newInstance(
+                            onHoldDialog.getStartType(),
+                            onHoldDialog.getStartText(),
+                            onHoldDialog.getEndType(),
+                            text,
+                            onHoldDialog.getTransportType(),
+                            onHoldDialog.getStartMarkerID(),
+                            mapMarker.getDbID());
+                    break;
             }
 
-            selectDirectionsMarkerState = false;
-            return false;
-        } else {
-            // Do default behaviour
-            return true;
+            if (newFragment != null) {
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+
+                Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+                if (prev != null) {
+                    ft.remove(prev);
+                }
+                ft.addToBackStack(null);
+
+                newFragment.show(ft, "dialog");
+            }
         }
+        return false;
     }
 }

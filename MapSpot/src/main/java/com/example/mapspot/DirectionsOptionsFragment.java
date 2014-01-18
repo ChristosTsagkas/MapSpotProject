@@ -3,7 +3,6 @@ package com.example.mapspot;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +12,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import static android.widget.AdapterView.OnItemSelectedListener;
 
@@ -29,25 +26,53 @@ import static android.widget.AdapterView.OnItemSelectedListener;
  */
 public class DirectionsOptionsFragment extends DialogFragment implements OnItemSelectedListener,
         View.OnClickListener {
-    private static final String LOCATION = "location";
+    private static final String STARTTYPE = "starting point type";
+    private static final String STARTTEXT = "starting point text";
+    private static final String ENDTYPE = "destination type";
+    private static final String ENDTEXT = "destination text";
+    private static final String TRANSPORTTYPE = "transport type";
+    private static final String STARTMARKERID = "starting point marker id";
+    private static final String ENDMARKERID = "destination marker id";
     private static final String APPTAG = "MapSpot";
-    private EditText referencedEditText = null;
 
-    private LatLng currentLocation;
+    private int referencedSpinnerID;
+    private int startType;
+    private String startText = "";
+    private int endType;
+    private String endText = "";
+    private int transportType;
+    private long startMarkerID;
+    private long endMarkerID;
+    private boolean programmaticStartSpinnerChange = false;
+    private boolean programmaticEndSpinnerChange = false;
 
     private OnFragmentInteractionListener mListener;
 
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
+     * Presets some values to be used when this fragment view is initialized.
+     * This needs only be called when a specific EditText is preset with a MapSpot.
      *
-     * @param currentLocation The current location of the user.
+     * @param startSelection     The starting point type.
+     * @param startText          The starting point EditText value.
+     * @param endSelection       The destination type.
+     * @param endText            The destination EditText value.
+     * @param transportSelection The transport type.
+     * @param startMarkerID      The MapSpot marker database ID for the starting point, if any.
+     * @param endMarkerID        The MapSpot marker database ID for the destination, if any.
      * @return A new instance of fragment DirectionsOptionsFragment.
      */
-    public static DirectionsOptionsFragment newInstance(LatLng currentLocation) {
+    public static DirectionsOptionsFragment newInstance(int startSelection, String startText, int endSelection, String endText, int transportSelection, long startMarkerID, long endMarkerID) {
         DirectionsOptionsFragment fragment = new DirectionsOptionsFragment();
         Bundle args = new Bundle();
-        args.putParcelable(LOCATION, currentLocation);
+        args.putInt(STARTTYPE, startSelection);
+        args.putString(STARTTEXT, startText);
+        args.putInt(ENDTYPE, endSelection);
+        args.putString(ENDTEXT, endText);
+        args.putInt(TRANSPORTTYPE, transportSelection);
+        args.putLong(STARTMARKERID, startMarkerID);
+        args.putLong(ENDMARKERID, endMarkerID);
         fragment.setArguments(args);
         return fragment;
     }
@@ -60,7 +85,13 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            currentLocation = getArguments().getParcelable(LOCATION);
+            startType = getArguments().getInt(STARTTYPE);
+            startText = getArguments().getString(STARTTEXT);
+            endType = getArguments().getInt(ENDTYPE);
+            endText = getArguments().getString(ENDTEXT);
+            transportType = getArguments().getInt(TRANSPORTTYPE);
+            startMarkerID = getArguments().getLong(STARTMARKERID);
+            endMarkerID = getArguments().getLong(ENDMARKERID);
         }
     }
 
@@ -72,8 +103,13 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
 
         getDialog().setTitle(getResources().getString(R.string.directions_title));
 
-        final Spinner startingPoint = (Spinner) view.findViewById(R.id.starting_point_spinner);
-        final Spinner destination = (Spinner) view.findViewById(R.id.destination_spinner);
+        EditText startingDetails = (EditText) view.findViewById(R.id.starting_point_details);
+        EditText destinationDetails = (EditText) view.findViewById(R.id.destination_details);
+        startingDetails.setText(startText);
+        destinationDetails.setText(endText);
+
+        Spinner startingPoint = (Spinner) view.findViewById(R.id.starting_point_spinner);
+        Spinner destination = (Spinner) view.findViewById(R.id.destination_spinner);
 
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),
@@ -85,6 +121,16 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
         startingPoint.setAdapter(adapter);
         destination.setAdapter(adapter);
 
+        startingPoint.setSelection(startType);
+        destination.setSelection(endType);
+        programmaticStartSpinnerChange = true;
+        programmaticEndSpinnerChange = true;
+
+        RadioGroup transportGroup = (RadioGroup) view.findViewById(R.id.transportGroup);
+        if (transportType != 0) {
+            transportGroup.check(transportType);
+        }
+
         // Attach listeners
         startingPoint.setOnItemSelectedListener(this);
         destination.setOnItemSelectedListener(this);
@@ -93,12 +139,6 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
         button.setOnClickListener(this);
 
         return view;
-    }
-
-    public void setPointText(String text) {
-        if (referencedEditText != null) {
-            referencedEditText.setText(text);
-        }
     }
 
     @Override
@@ -121,14 +161,19 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         int spinnerID = parent.getId();
+        boolean programmaticChange = false;
 
         EditText editText = null;
         switch (spinnerID) {
             case R.id.starting_point_spinner:
                 editText = (EditText) getView().findViewById(R.id.starting_point_details);
+                programmaticChange = programmaticStartSpinnerChange;
+                startType = position;
                 break;
             case R.id.destination_spinner:
                 editText = (EditText) getView().findViewById(R.id.destination_details);
+                programmaticChange = programmaticEndSpinnerChange;
+                endType = position;
                 break;
         }
 
@@ -140,20 +185,29 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
                     break;
                 case 1: // Current
                     editText.setEnabled(false);
+                    editText.setText("");
                     editText.setVisibility(View.GONE);
                     break;
                 case 2: // MapSpot
                     editText.setEnabled(false);
-                    editText.setText("");
                     editText.setVisibility(View.VISIBLE);
-                    if (mListener != null) {
+                    if (mListener != null && !programmaticChange) {
+                        RadioGroup radioGroup = (RadioGroup) getView().findViewById(R.id.transportGroup);
+                        transportType = radioGroup.getCheckedRadioButtonId();
+                        referencedSpinnerID = spinnerID;
                         mListener.onFragmentInteraction();
-                        referencedEditText = editText;
-                    } else {
-                        Log.d(APPTAG, "null listener");
                     }
                     break;
             }
+        }
+
+        switch (spinnerID) {
+            case R.id.starting_point_spinner:
+                programmaticStartSpinnerChange = false;
+                break;
+            case R.id.destination_spinner:
+                programmaticEndSpinnerChange = false;
+                break;
         }
     }
 
@@ -165,17 +219,17 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.start_navigation_button) {
-            Spinner startSpinner = (Spinner) view.findViewById(R.id.starting_point_spinner);
-            String startSelection = startSpinner.getSelectedItem().toString();
-            EditText startEditText = (EditText) view.findViewById(R.id.starting_point_details);
+            Spinner startSpinner = (Spinner) getView().findViewById(R.id.starting_point_spinner);
+            int startSelection = startSpinner.getSelectedItemPosition();
+            EditText startEditText = (EditText) getView().findViewById(R.id.starting_point_details);
             String startText = startEditText.getText().toString();
 
-            Spinner endSpinner = (Spinner) view.findViewById(R.id.destination_spinner);
-            String endSelection = endSpinner.getSelectedItem().toString();
-            EditText endEditText = (EditText) view.findViewById(R.id.destination_details);
+            Spinner endSpinner = (Spinner) getView().findViewById(R.id.destination_spinner);
+            int endSelection = endSpinner.getSelectedItemPosition();
+            EditText endEditText = (EditText) getView().findViewById(R.id.destination_details);
             String endText = endEditText.getText().toString();
 
-            RadioGroup transportGroup = (RadioGroup) view.findViewById(R.id.transportGroup);
+            RadioGroup transportGroup = (RadioGroup) getView().findViewById(R.id.transportGroup);
             int transportSelection = transportGroup.getCheckedRadioButtonId();
 
             mListener.onFragmentFinish(startSelection, startText, endSelection, endText, transportSelection);
@@ -195,7 +249,38 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction();
 
-        public void onFragmentFinish(String startSelection, String startText, String endSelection, String endText, int transportSelection);
+        public void onFragmentFinish(int startSelection, String startText, int endSelection, String endText, int transportSelection);
     }
 
+    public int getStartType() {
+        return startType;
+    }
+
+    public String getStartText() {
+        return startText;
+    }
+
+    public int getEndType() {
+        return endType;
+    }
+
+    public String getEndText() {
+        return endText;
+    }
+
+    public int getTransportType() {
+        return transportType;
+    }
+
+    public int getReferencedSpinnerID() {
+        return referencedSpinnerID;
+    }
+
+    public long getStartMarkerID() {
+        return startMarkerID;
+    }
+
+    public long getEndMarkerID() {
+        return endMarkerID;
+    }
 }
