@@ -16,6 +16,8 @@
     <string name="successful_save">Saved successfully</string>
     <string name="successful_delete">Successful deletion</string>
     <string name="select_marker">Select a marker</string>
+    <string name="directions_error">Found no path</string>
+    <string name="navigation_start">Navigation started</string>
 
     <!-- Marker menu items -->
     <string name="marker_options_title">Marker options</string>

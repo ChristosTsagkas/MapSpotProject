@@ -232,7 +232,7 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
             RadioGroup transportGroup = (RadioGroup) getView().findViewById(R.id.transportGroup);
             int transportSelection = transportGroup.getCheckedRadioButtonId();
 
-            mListener.onFragmentFinish(startSelection, startText, endSelection, endText, transportSelection);
+            mListener.onFragmentFinish(startSelection, startText, endSelection, endText, transportSelection, startMarkerID, endMarkerID);
         }
     }
 
@@ -249,7 +249,7 @@ public class DirectionsOptionsFragment extends DialogFragment implements OnItemS
     public interface OnFragmentInteractionListener {
         public void onFragmentInteraction();
 
-        public void onFragmentFinish(int startSelection, String startText, int endSelection, String endText, int transportSelection);
+        public void onFragmentFinish(int startSelection, String startText, int endSelection, String endText, int transportSelection, long startMarkerID, long endMarkerID);
     }
 
     public int getStartType() {

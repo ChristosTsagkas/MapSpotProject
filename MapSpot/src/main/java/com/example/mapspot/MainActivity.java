@@ -5,6 +5,10 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.graphics.Color;
+import android.location.Location;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -27,7 +31,17 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -482,19 +496,55 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     }
 
     @Override
-    public void onFragmentFinish(int startSelection, String startText, int endSelection, String endText, int transportSelection) {
-        Log.d(APPTAG, "Type of starting point: " + startSelection + "\n"
-                + "Value of starting point: " + startText + "\n"
-                + "Type of destination: " + endSelection + "\n"
-                + "Value of destination: " + endText + "\n"
-                + "Type of transport: " + transportSelection);
+    public void onFragmentFinish(int startSelection, String startText, int endSelection, String endText, int transportSelection, long startMarkerID, long endMarkerID) {
         DialogFragment dialog = (DialogFragment) getFragmentManager().findFragmentByTag("dialog");
         if (dialog != null) {
             dialog.dismiss();
         }
 
-        // TODO: add code
-        locationClient.getLastLocation();
+        String params = "?sensor=true";
+
+        switch (startSelection) {
+            case 0:
+                params += "&origin=" + Uri.encode(startText);
+                break;
+            case 1:
+                Location currentLocation = locationClient.getLastLocation();
+                params += "&origin=" + currentLocation.getLatitude() + "," + currentLocation.getLongitude();
+                break;
+            case 2:
+                MapMarker marker = db.getMarkerByID(startMarkerID);
+                params += "&origin=" + marker.getPosition().latitude + "," + marker.getPosition().longitude;
+                break;
+        }
+
+        switch (endSelection) {
+            case 0:
+                params += "&destination=" + Uri.encode(endText);
+                break;
+            case 1:
+                Location currentLocation = locationClient.getLastLocation();
+                params += "&destination=" + currentLocation.getLatitude() + "," + currentLocation.getLongitude();
+                break;
+            case 2:
+                MapMarker marker = db.getMarkerByID(endMarkerID);
+                params += "&destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude;
+                break;
+        }
+
+        switch (transportSelection) {
+            case R.id.pedestrian:
+                params += "&mode=walking";
+                break;
+            case R.id.bicycle:
+                params += "&mode=bicycling";
+                break;
+            case R.id.car:
+                params += "&mode=driving";
+                break;
+        }
+
+        new DownloadAsyncTask().execute(params);
     }
 
     @Override
@@ -545,5 +595,131 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
             }
         }
         return false;
+    }
+
+    /**
+     * A method to download json data from url
+     *
+     * @param strUrl A working URL string.
+     * @return The data returned from the URL parsing.
+     */
+    private String downloadUrl(String strUrl) throws IOException {
+        String data = "";
+        InputStream iStream = null;
+        HttpURLConnection urlConnection = null;
+        try {
+            URL url = new URL(strUrl);
+
+            // Creating an http connection to communicate with url
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            // Connecting to url
+            urlConnection.connect();
+
+            // Reading data from url
+            iStream = urlConnection.getInputStream();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+
+            StringBuffer sb = new StringBuffer();
+
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+
+            data = sb.toString();
+
+            br.close();
+
+        } catch (Exception e) {
+            Log.d("Exception while downloading url", e.toString());
+        } finally {
+            iStream.close();
+            urlConnection.disconnect();
+        }
+        return data;
+    }
+
+    private class DownloadAsyncTask extends AsyncTask<String, Void, String> {
+        private static final String PREFIXURL = "http://maps.googleapis.com/maps/api/directions/json";
+
+        @Override
+        protected String doInBackground(String... params) {
+            Log.d(APPTAG, "Requesting directions from: " + PREFIXURL + params[0]);
+            String data = null;
+            try {
+                data = downloadUrl(PREFIXURL + params[0]);
+            } catch (IOException e) {
+                Log.d(APPTAG, e.toString());
+            }
+
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            new ParserTask().execute(result);
+        }
+    }
+
+    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+
+        @Override
+        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
+            JSONObject jObject;
+            List<List<HashMap<String, String>>> routes = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                DirectionsJSONParser parser = new DirectionsJSONParser();
+
+                // Starts parsing data
+                routes = parser.parse(jObject);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
+            ArrayList<LatLng> points;
+            PolylineOptions lineOptions = null;
+
+            // Traversing through all the routes
+            for (int i = 0; i < result.size(); i++) {
+                points = new ArrayList<>();
+                lineOptions = new PolylineOptions();
+
+                // Fetching i-th route
+                List<HashMap<String, String>> path = result.get(i);
+
+                // Fetching all the points in i-th route
+                for (int j = 0; j < path.size(); j++) {
+                    HashMap<String, String> point = path.get(j);
+
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lng = Double.parseDouble(point.get("lng"));
+                    LatLng position = new LatLng(lat, lng);
+
+                    points.add(position);
+                }
+
+                // Adding all the points in the route to LineOptions
+                lineOptions.addAll(points);
+                lineOptions.color(Color.MAGENTA);
+            }
+
+            if (lineOptions == null) {
+                Toast.makeText(MainActivity.this, getResources().getString(R.string.directions_error), Toast.LENGTH_LONG);
+            } else {
+                // Drawing polyline in the Google Map for the i-th route
+                map.addPolyline(lineOptions);
+                Toast.makeText(MainActivity.this, getResources().getString(R.string.navigation_start), Toast.LENGTH_SHORT);
+            }
+        }
     }
 }
