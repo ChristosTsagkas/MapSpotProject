@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -50,6 +53,7 @@ import java.util.List;
 public class MainActivity extends FragmentActivity implements GoogleMap.OnMapClickListener,
         GoogleMap.OnInfoWindowClickListener,
         GoogleMap.OnMarkerClickListener,
+        GoogleMap.OnMapLongClickListener,
         DirectionsOptionsFragment.OnFragmentInteractionListener,
         MarkerDetailsDialogFragment.MarkerDialogListener {
     // Global constants
@@ -96,6 +100,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
 
         // Set onclick events for the info balloons
         map.setOnInfoWindowClickListener(this);
+        map.setOnMapLongClickListener(this);
 
         /*
          * Create a location handler class instance and assign it to
@@ -561,7 +566,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
         params += "&language=" + navLangPref;
 
         String navUnitPref = sharedPref.getString(SettingsActivity.NAVIGATION_UNIT_PREFERENCE, "");
-        params += "&units=" + navLangPref;
+        params += "&units=" + navUnitPref;
 
         new DownloadAsyncTask().execute(params);
     }
@@ -667,6 +672,52 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
             urlConnection.disconnect();
         }
         return data;
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        new ReverseGeocodeAsyncTask(getBaseContext()).execute(latLng);
+    }
+
+    private class ReverseGeocodeAsyncTask extends AsyncTask<LatLng, Void, String> {
+        Context mContext;
+
+        public ReverseGeocodeAsyncTask(Context context) {
+            super();
+            mContext = context;
+        }
+
+        @Override
+        protected String doInBackground(LatLng... params) {
+            Geocoder geocoder = new Geocoder(mContext);
+            double latitude = params[0].latitude;
+            double longitude = params[0].longitude;
+            List<Address> addresses;
+            String addressText = "";
+            try {
+                addresses = geocoder.getFromLocation(latitude, longitude, 1);
+                Thread.sleep(500);
+
+                if (addresses != null && addresses.size() > 0) {
+                    Address address = addresses.get(0);
+                    addressText = String.format("%s, %s, %s",
+                            address.getMaxAddressLineIndex() > 0 ? address.getAddressLine(0) : "",
+                            address.getLocality(),
+                            address.getCountryName());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return addressText;
+        }
+
+        @Override
+        protected void onPostExecute(String addressText) {
+            Log.d(APPTAG, addressText);
+            Toast.makeText(mContext, addressText, Toast.LENGTH_LONG).show();
+        }
     }
 
     private class DownloadAsyncTask extends AsyncTask<String, Void, String> {
