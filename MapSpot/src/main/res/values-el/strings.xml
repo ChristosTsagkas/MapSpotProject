@@ -55,5 +55,6 @@
     <string name="supermarket">Πολυκατάστημα</string>
     <string name="title">Τίτλος</string>
     <string name="transport">Μεταφορά</string>
+    <string name="progress_dialog_text">Γίνεται κοινοποίηση, παρακαλώ περιμένετε.</string>
 
 </resources>

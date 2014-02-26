@@ -42,6 +42,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -66,6 +67,9 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     private HashMap<String, Long> markerMap = new HashMap<>();
     private Marker selectedMarker;
     private UiLifecycleHelper uiHelper;
+    private static final List<String> PERMISSIONS = Arrays.asList("publish_actions");
+    private static final String PENDING_PUBLISH_KEY = "pendingPublishReauthorization";
+    private boolean pendingPublishReauthorization = false;
 
     private DirectionsOptionsFragment onHoldDialog;
 
@@ -108,6 +112,11 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
             }
         });
         uiHelper.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            pendingPublishReauthorization =
+                    savedInstanceState.getBoolean(PENDING_PUBLISH_KEY, false);
+        }
     }
 
     /**
@@ -231,6 +240,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putBoolean(PENDING_PUBLISH_KEY, pendingPublishReauthorization);
         uiHelper.onSaveInstanceState(outState);
     }
 
@@ -288,7 +298,10 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     }
 
     private void onSessionStateChanged(Session session, SessionState state, Exception exception) {
-        Log.d(APPTAG, "RESPONSE");
+        if (pendingPublishReauthorization &&
+                state.equals(SessionState.OPENED_TOKEN_UPDATED)) {
+            pendingPublishReauthorization = false;
+        }
     }
 
     @Override
@@ -433,20 +446,19 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     public void shareMarker(MenuItem item) {
         MapMarker mapMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
 
-        OpenGraphObject meal = OpenGraphObject.Factory.createForPost("video.movie");
-        meal.setProperty("title", "Buffalo Tacos");
-        meal.setProperty("image", "http://ia.media-imdb.com/images/M/MV5BMzU0NDY0NDEzNV5BMl5BanBnXkFtZTgwOTIxNDU1MDE@._V1_SX640_SY720_.jpg");
-        meal.setProperty("url", "http://www.imdb.com/title/tt1170358/?ref_=hm_cht_t1");
-        meal.setProperty("description", "Leaner than beef and great flavor.");
+        OpenGraphObject location = OpenGraphObject.Factory.createForPost("mapspot-app:location");
+        location.setProperty("url", "https://www.google.com/maps/?q=" + mapMarker.getPosition().latitude + "," + mapMarker.getPosition().longitude);
+        location.setProperty("title", mapMarker.getTitle());
+        location.setProperty("place:location:latitude", mapMarker.getPosition().latitude);
+        location.setProperty("place:location:longitude", mapMarker.getPosition().longitude);
+        location.setProperty("place:location:altitude", "42");
 
         OpenGraphAction action = GraphObject.Factory.create(OpenGraphAction.class);
-        action.setProperty("objects/video.movie", meal);
+        action.setProperty("location", location);
 
-        FacebookDialog shareDialog = new FacebookDialog.OpenGraphActionDialogBuilder(this, action, "video.watches", "objects/video.movie")
+        FacebookDialog shareDialog = new FacebookDialog.OpenGraphActionDialogBuilder(this, action, "mapspot-app:share", "location")
                 .build();
         uiHelper.trackPendingDialogCall(shareDialog.present());
-
-        removeMarkerMenu();
     }
 
     /**

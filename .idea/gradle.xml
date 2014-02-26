@@ -13,12 +13,6 @@
             <option value="$PROJECT_DIR$/libraries/facebook" />
           </set>
         </option>
-        <option name="useAutoImport" value="true" />
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/libraries/facebook" />
-        <option name="useAutoImport" value="true" />
       </GradleProjectSettings>
     </option>
   </component>
