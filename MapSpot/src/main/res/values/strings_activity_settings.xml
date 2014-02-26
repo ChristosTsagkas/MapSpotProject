@@ -1,0 +1,32 @@
+<resources>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_navigation_language">Navigation language</string>
+    <string-array name="pref_navigation_languages_list_titles">
+        <item>@string/english</item>
+        <item>@string/greek</item>
+    </string-array>
+    <string-array name="pref_navigation_languages_list_values">
+        <item>en</item>
+        <item>el</item>
+    </string-array>
+    <string name="english">English</string>
+    <string name="greek">Greek</string>
+
+    <string name="pref_navigation_length_unit">Navigation length unit</string>
+    <string-array name="pref_navigation_length_unit_list_titles">
+        <item>@string/km</item>
+        <item>@string/miles</item>
+    </string-array>
+    <string-array name="pref_navigation_length_unit_list_values">
+        <item>metric</item>
+        <item>imperial</item>
+    </string-array>
+    <string name="km">Kilometers</string>
+    <string name="miles">Miles</string>
+</resources>

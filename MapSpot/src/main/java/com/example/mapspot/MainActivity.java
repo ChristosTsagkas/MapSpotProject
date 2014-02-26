@@ -5,11 +5,13 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -42,7 +44,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -67,7 +68,6 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     private HashMap<String, Long> markerMap = new HashMap<>();
     private Marker selectedMarker;
     private UiLifecycleHelper uiHelper;
-    private static final List<String> PERMISSIONS = Arrays.asList("publish_actions");
     private static final String PENDING_PUBLISH_KEY = "pendingPublishReauthorization";
     private boolean pendingPublishReauthorization = false;
 
@@ -556,6 +556,13 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
                 break;
         }
 
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String navLangPref = sharedPref.getString(SettingsActivity.NAVIGATION_LANGUAGE_PREFERENCE, "");
+        params += "&language=" + navLangPref;
+
+        String navUnitPref = sharedPref.getString(SettingsActivity.NAVIGATION_UNIT_PREFERENCE, "");
+        params += "&units=" + navLangPref;
+
         new DownloadAsyncTask().execute(params);
     }
 
@@ -607,6 +614,15 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
             }
         }
         return false;
+    }
+
+    /**
+     * Shows the settings fragment.
+     *
+     * @param item The button clicked.
+     */
+    public void openSettings(MenuItem item) {
+        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     /**
