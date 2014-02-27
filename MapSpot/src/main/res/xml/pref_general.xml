@@ -1,0 +1,24 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
+         dismiss it. -->
+    <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
+    <ListPreference
+        android:key="pref_lang"
+        android:title="@string/pref_navigation_language"
+        android:defaultValue="en"
+        android:entries="@array/pref_navigation_languages_list_titles"
+        android:entryValues="@array/pref_navigation_languages_list_values"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />
+
+    <ListPreference
+        android:key="pref_length_unit"
+        android:title="@string/pref_navigation_length_unit"
+        android:defaultValue="km"
+        android:entries="@array/pref_navigation_length_unit_list_titles"
+        android:entryValues="@array/pref_navigation_length_unit_list_values"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null" />
+
+</PreferenceScreen>
