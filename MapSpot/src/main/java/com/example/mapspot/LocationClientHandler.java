@@ -74,8 +74,6 @@ public class LocationClientHandler implements GooglePlayServicesClient.Connectio
      */
     @Override
     public void onConnected(Bundle bundle) {
-        // Display the connection status
-        Toast.makeText(context, "Connected", Toast.LENGTH_SHORT).show();
         Location currentLocation = locationClient.getLastLocation();
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), 15));
     }
@@ -87,7 +85,7 @@ public class LocationClientHandler implements GooglePlayServicesClient.Connectio
     @Override
     public void onDisconnected() {
         // Display the connection status
-        Toast.makeText(context, "Disconnected. Please re-connect.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, context.getResources().getString(R.string.disconnected), Toast.LENGTH_SHORT).show();
     }
 
     /*

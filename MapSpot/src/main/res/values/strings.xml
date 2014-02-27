@@ -18,6 +18,8 @@
     <string name="directions_error">Found no path</string>
     <string name="navigation_start">Navigation started</string>
     <string name="progress_dialog_text">Sharing, please wait.</string>
+    <string name="disconnected">Disconnected. Please re-connect.</string>
+    <string name="click_on_map">Click on the map to set a new point.</string>
 
     <!-- Marker menu items -->
     <string name="marker_options_title">Point options</string>

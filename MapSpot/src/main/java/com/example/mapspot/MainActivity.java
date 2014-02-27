@@ -119,8 +119,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
         uiHelper.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
-            pendingPublishReauthorization =
-                    savedInstanceState.getBoolean(PENDING_PUBLISH_KEY, false);
+            pendingPublishReauthorization = savedInstanceState.getBoolean(PENDING_PUBLISH_KEY, false);
         }
     }
 
@@ -245,7 +244,6 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(PENDING_PUBLISH_KEY, pendingPublishReauthorization);
         uiHelper.onSaveInstanceState(outState);
     }
 
@@ -265,6 +263,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
      */
     public void addNewMarker(MenuItem item) {
         map.setOnMapClickListener(this);
+        Toast.makeText(this, getResources().getString(R.string.click_on_map), Toast.LENGTH_SHORT);
     }
 
     /*
@@ -273,6 +272,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         // Decide what to do based on the original request code
         switch (requestCode) {
             case CONNECTION_FAILURE_RESOLUTION_REQUEST:
@@ -452,17 +452,17 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
         MapMarker mapMarker = db.getMarkerByID(markerMap.get(selectedMarker.getId()));
 
         OpenGraphObject location = OpenGraphObject.Factory.createForPost("mapspot-app:location");
-        location.setProperty("url", "https://www.google.com/maps/?q=" + mapMarker.getPosition().latitude + "," + mapMarker.getPosition().longitude);
-        location.setProperty("title", mapMarker.getTitle());
+        location.setTitle(mapMarker.getTitle());
+        location.setDescription(mapMarker.getDescription());
+        location.setUrl("https://www.google.com/maps/?q=" + mapMarker.getPosition().latitude + "," + mapMarker.getPosition().longitude);
         location.setProperty("place:location:latitude", mapMarker.getPosition().latitude);
         location.setProperty("place:location:longitude", mapMarker.getPosition().longitude);
-        location.setProperty("place:location:altitude", "42");
 
         OpenGraphAction action = GraphObject.Factory.create(OpenGraphAction.class);
         action.setProperty("location", location);
+        Log.d(APPTAG, action.getProperty("location").toString());
 
-        FacebookDialog shareDialog = new FacebookDialog.OpenGraphActionDialogBuilder(this, action, "mapspot-app:share", "location")
-                .build();
+        FacebookDialog shareDialog = new FacebookDialog.OpenGraphActionDialogBuilder(this, action, "mapspot-app:share", "location").build();
         uiHelper.trackPendingDialogCall(shareDialog.present());
     }
 
@@ -568,7 +568,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
         String navUnitPref = sharedPref.getString(SettingsActivity.NAVIGATION_UNIT_PREFERENCE, "");
         params += "&units=" + navUnitPref;
 
-        new DownloadAsyncTask().execute(params);
+        new DirectionsAsyncTask().execute(params);
     }
 
     @Override
@@ -715,12 +715,11 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
 
         @Override
         protected void onPostExecute(String addressText) {
-            Log.d(APPTAG, addressText);
             Toast.makeText(mContext, addressText, Toast.LENGTH_LONG).show();
         }
     }
 
-    private class DownloadAsyncTask extends AsyncTask<String, Void, String> {
+    private class DirectionsAsyncTask extends AsyncTask<String, Void, String> {
         private static final String PREFIXURL = "http://maps.googleapis.com/maps/api/directions/json";
 
         @Override
@@ -797,6 +796,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
             } else {
                 // Drawing polyline in the Google Map for the i-th route
                 map.addPolyline(lineOptions);
+
                 Toast.makeText(MainActivity.this, getResources().getString(R.string.navigation_start), Toast.LENGTH_SHORT);
             }
         }

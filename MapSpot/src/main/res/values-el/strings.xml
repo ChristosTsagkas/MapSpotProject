@@ -64,5 +64,7 @@
     <string name="greek">Ελληνικά</string>
     <string name="km">Χιλιόμετρα</string>
     <string name="miles">Μίλια</string>
+    <string name="disconnected">Έγινε αποσύνδεση. Παρακαλώ ξανασυνδεθείτε.</string>
+    <string name="click_on_map">Πατήστε κάπου στον χάρτη για να προσθέσετε ένα σημείο.</string>
 
 </resources>
