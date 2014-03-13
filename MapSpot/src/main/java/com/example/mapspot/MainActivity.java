@@ -263,7 +263,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
      */
     public void addNewMarker(MenuItem item) {
         map.setOnMapClickListener(this);
-        Toast.makeText(this, getResources().getString(R.string.click_on_map), Toast.LENGTH_SHORT);
+        Toast.makeText(this, getResources().getString(R.string.click_on_map), Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -349,7 +349,7 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMapCli
             editMarkerOnMap(editedMarker, selectedMarker);
             removeMarkerMenu();
         }
-        Toast.makeText(this, getResources().getText(R.string.successful_save), Toast.LENGTH_SHORT);
+        Toast.makeText(this, getResources().getText(R.string.successful_save), Toast.LENGTH_SHORT).show();
     }
 
     @Override
