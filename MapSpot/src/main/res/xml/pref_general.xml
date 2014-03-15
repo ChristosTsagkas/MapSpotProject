@@ -15,7 +15,7 @@
     <ListPreference
         android:key="pref_length_unit"
         android:title="@string/pref_navigation_length_unit"
-        android:defaultValue="km"
+        android:defaultValue="metric"
         android:entries="@array/pref_navigation_length_unit_list_titles"
         android:entryValues="@array/pref_navigation_length_unit_list_values"
         android:negativeButtonText="@null"
